@@ -37,14 +37,29 @@
    ;; BP Natural -> Node
    bp-node-ref))
 
-(define-signature ishmm^
-  (;; -> ISHMM
-   create-ishmm
-   ;; ISHMM (Vectorof Obs) -> ISHMM
-   ishmm-iterate))
+(define-signature hmm^
+  (;; -> HMM
+   create-hmm
+   ;; HMM -> (Vectorof [0,1])
+   hmm-initial-probabilities
+   ;; HMM Natural -> (Vectorof [0,1])
+   hmm-transition-probabilities
+   ;; HMM (Vectorof {0,1}) Obs -> (Vectorof [0,1])
+   hmm-observation-probabilities))
+
+(define-signature forward-backward^
+  (;; HMM (Vectorof Obs) -> (Vectorof (Vector [0,1]))
+   smooth
+   ;; HMM (Vectorof Obs) -> (Vectorof Natural)
+   sample
+   ;; HMM (Vectorof Obs) -> (Vectorof [0,1])
+   forward
+   ;; HMM (Vectorof Obs) (Vectorof [0,1]) -> (Vectorof [0,1])
+   backward))
 
 (provide
  node^
  bp-config^
  bp^
- ishmm^)
+ hmm^
+ forward-backward^)
