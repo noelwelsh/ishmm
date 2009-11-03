@@ -72,16 +72,17 @@
          (let* ([f (vector-ref fwd (sub1 i))]
                 [n-states (vector-length f)]
                 [normalisation
-                 (for/fold ([k (make-vector n-states)])
-                     ([s (in-range n-states)])
-                   (vector+ k
-                            (vector* f (hmm-transition-probabilities hmm s))))]
+                 (for/fold ([z (make-vector n-states)])
+                      ([s (in-range n-states)])
+                    (vector+ z
+                             (vector*s (hmm-transition-probabilities hmm s)
+                                       (vector-ref f s))))]
                 [next-p
-                 (vector/
-                  (vector*
+                 (vector*
                    f
                    (for/vector ([s n-states])
-                               (vector-sum (vector* p (hmm-transition-probabilities hmm s)))))
-                  normalisation)])
-           (values next-p p)))))
+                               (vector-sum
+                                (vector/ (vector* p (hmm-transition-probabilities hmm s))
+                                          normalisation))))])
+           (values (vector/s next-p (vector-sum next-p)) p)))))
   bwd)
