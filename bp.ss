@@ -54,16 +54,43 @@
 ;; unsampled nodes. The indices are arbitrary.
 (define (bp-sample-weights p)
   (match-define (struct bp [c n weights nodes]) p)
-  (vector-map
-   (lambda (w)
-     (for/sum ([i (in-range w)])
-       (random-beta 1 (+ c n -1))))
-   weights))
+  (values
+   (vector-map
+    (lambda (w)
+      (for/sum ([i (in-range w)])
+        (random-beta 1 (+ c n -1))))
+    weights)
+   (for/vector ([i (random-poisson (/ (* c gamma) (+ c n)))])
+               ;; TODO! Check this!
+     (random-beta 1 (+ c n)))))
 
-;; BP ??? -> BP
-(define (bp-update bp data)
-  ...)
+;; BP (Vectorof Obs) (Vectorof Natural) -> BP
+;;
+;; Assignments is a vector of indices, indicating to which node each observation is assigned. These indices are *not* retained in the returned BP -- data is assigned to nodes so that there are no gaps in the indices.
+(define (bp-update bp data assignments)
+  ;; (Hashof Natural Natural)
+  (define idx-lookup (make-hash))
+  ;; (Hashof Natural Node)
+  (define nodes (make-hash))
+  ;; Natural
+  ;; The number of unique indices in assignments. Calculating it has the side-effect of filling idx-lookup and nodes
+  (define n-indices
+    (for/fold ([next-idx 0])
+        ([o (in-vector data)]
+         [i (in-vector assignments)])
+      (if (hash-has-key? idx-lookup i)
+          (let ([idx (hash-ref idx-lookup i)])
+            (hash-update! nodes idx (lambda (node) (node-add node o)))
+            next-idx)
+          (begin (hash-set! idx-lookup i next-idx)
+                 (hash-set! nodes next-idx (node-add (create-node) o))
+                 (add1 next-idx)))))
+  (for/vector ([i n-indices])
+    (hash-ref nodes i)))
 
 ;; BP Natural -> Node
-(define (bp-node-ref bp idx)
-  ...)
+(define (bp-node-ref p idx)
+  (match-define (struct bp [c n weights nodes]) p)
+  (if (< idx (vector-length nodes))
+      (vector-ref nodes idx)
+      (create-node)))

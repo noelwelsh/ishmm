@@ -32,9 +32,9 @@
    create-bp
    ;; BP -> (values (Vectorof {0,1}) Natural)
    bp-sample-transitions
-   ;; BP -> (values (Vectorof [0,1]) Natural)
+   ;; BP -> (values (Vectorof [0,1]) (Vectorof [0,1]))
    bp-sample-weights
-   ;; BP ??? -> BP
+   ;; BP (Vectorof Obs) (Vectorof Natural) -> BP
    bp-update
    ;; BP Natural -> Node
    bp-node-ref))
