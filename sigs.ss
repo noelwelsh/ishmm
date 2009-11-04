@@ -21,16 +21,18 @@
    node-remove))
 
 (define-signature bp-config^
-  (;; Number > 0
-   c))
+  (;; Number > 0, the concentration parameter
+   c
+   ;; Number > 0, the mass of B_0
+   gamma))
 
 (define-signature bp^
   ;; type Node
   (;; -> BP
    create-bp
-   ;; BP -> ???
+   ;; BP -> (values (Vectorof {0,1}) Natural)
    bp-sample-transitions
-   ;; BP -> ???
+   ;; BP -> (values (Vectorof [0,1]) Natural)
    bp-sample-weights
    ;; BP ??? -> BP
    bp-update
