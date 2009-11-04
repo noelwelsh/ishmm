@@ -22,7 +22,7 @@
 ;; weights is the vector of weights given to the nodes
 ;;
 ;; nodes is the already sampled nodes, discrete part of the BP.
-(define-struct bp (c n weights nodes))
+(define-struct bp (n weights nodes))
 
 
 ;; -> BP
@@ -35,7 +35,7 @@
 ;; the number of unvisited nodes that this transition
 ;; vector is connected to.
 (define (bp-sample-transitions p)
-  (match-define (struct bp [c n weights nodes]) p)
+  (match-define (struct bp [n weights nodes]) p)
   (values
    (vector-map
     (lambda (w)
@@ -53,7 +53,7 @@
 ;; bp-node-ref). The second vector is weights given to
 ;; unsampled nodes. The indices are arbitrary.
 (define (bp-sample-weights p)
-  (match-define (struct bp [c n weights nodes]) p)
+  (match-define (struct bp [n weights nodes]) p)
   (values
    (vector-map
     (lambda (w)
@@ -72,6 +72,8 @@
   (define idx-lookup (make-hash))
   ;; (Hashof Natural Node)
   (define nodes (make-hash))
+  ;; (Hashof Natural Natural)
+  (define weights (make-hash))
   ;; Natural
   ;; The number of unique indices in assignments. Calculating it has the side-effect of filling idx-lookup and nodes
   (define n-indices
@@ -81,16 +83,25 @@
       (if (hash-has-key? idx-lookup i)
           (let ([idx (hash-ref idx-lookup i)])
             (hash-update! nodes idx (lambda (node) (node-add node o)))
+            (hash-update! weights idx (lambda (w) (add1 w)))
             next-idx)
           (begin (hash-set! idx-lookup i next-idx)
                  (hash-set! nodes next-idx (node-add (create-node) o))
+                 (hash-set! weights next-idx 1)
                  (add1 next-idx)))))
-  (for/vector ([i n-indices])
-    (hash-ref nodes i)))
+  
+  (let-values (([w n]
+                (for/vector ([i n-indices 2])
+                            (values
+                             (hash-ref weights i)
+                             (hash-ref nodes i)))))
+    (make-bp (vector-length data) w n)))
+   
+  
 
 ;; BP Natural -> Node
 (define (bp-node-ref p idx)
-  (match-define (struct bp [c n weights nodes]) p)
+  (match-define (struct bp [n weights nodes]) p)
   (if (< idx (vector-length nodes))
       (vector-ref nodes idx)
       (create-node)))
