@@ -3,6 +3,8 @@
 (require
  scheme/match
  (planet williams/science/random-distributions/beta)
+ (planet williams/science/random-distributions/poisson)
+ (planet schematics/numeric:1/vector)
  (planet schematics/numeric:1/for)
  "base.ss"
  "sigs.ss")
@@ -62,7 +64,7 @@
         (random-beta 1 (+ c n -1))))
     weights)
    (for/vector ([i n-unvisited])
-     (random-beta 1 (+ c n -1)))))
+     (random-beta 1 (+ c n)))))
 
 ;; BP (Vectorof Obs) (Vectorof Natural) -> BP
 ;;

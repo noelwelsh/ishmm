@@ -2,6 +2,7 @@
 
 (require
  scheme/match
+ (planet schematics/numeric:1/vector)
  "base.ss"
  "sigs.ss")
 
@@ -26,19 +27,19 @@
 ;; outside. That is, every function call will always return
 ;; the same answer -- it is just that we may not have
 ;; computed the answer at the time of the call.
-(define-struct ishmm (bp offset transitions) #:mutable)
+(define-struct ishmm (bp offset initial transitions) #:mutable)
 
 
 ;; -> ISHMM
-(define (create-ishmm)
-  (make-ishmm (make-bp) 0 #f (vector)))
+(define (create-hmm)
+  (make-ishmm (create-bp) 0 #f (vector)))
 
 ;; ISHMM -> (Vectorof [0,1])
 (define (hmm-initial-probabilities hmm)
   (match-define (struct ishmm [bp o i t]) hmm)
   (if i
       i
-      (let ([ps (sample-transitions bp offset)])
+      (let ([ps (sample-transitions bp o)])
         (set-ishmm-initial! hmm ps)
         ps)))
 
@@ -51,6 +52,7 @@
 ;; ISHMM Natural -> (Vectorof [0,1])
 (define (hmm-transition-probabilities hmm node-idx)
   (match-define (struct ishmm [bp o i t]) hmm)
+  ;;(printf "~a ~a\n" node-idx t)
   (if (< node-idx (vector-length t))
       (let ([ps (vector-ref t node-idx)])
         (if ps
@@ -58,23 +60,24 @@
             (let ([ps (sample-transitions bp o)])
               (vector-set! t node-idx ps)
               ps)))
-      (let ([ps (sample-transitions bp o)])
-        (set-ishmm-transitions! hmm (transitions-extend t ps node-idx))
+      (let* ([ps (sample-transitions bp o)]
+             [new-t  (transitions-extend t ps node-idx)])
+        (set-ishmm-transitions! hmm new-t)
         ps)))
 
 
 ;; Internal functions
 
 (define (sample-transitions bp offset)
-  (let-values* (([ts uv-ts] (bp-sample-transitions bp))
-                ([ws uv-ws] (bp-sample-weights bp (vector-length uv-ts))))
+  (let*-values (([ts uv-ts] (bp-sample-transitions bp))
+                ([ws uv-ws] (bp-sample-weights bp uv-ts)))
     (weights+transitions->probabilities ws uv-ws ts uv-ts offset)))
 
 (define (weights+transitions->probabilities ws uv-ws ts uv-ts offset)
   (define total-weight (+ (vector-sum ws) (vector-sum uv-ws)))
   (define n-visited (vector-length ws))
   (define n-unvisited (vector-length uv-ws))
-  (define n (+ (vector-length ws) offset (vector-length uv-ws)))
+  (define n (+ n-visited offset n-unvisited))
 
   (for/vector ([i n])
     (cond
@@ -83,21 +86,21 @@
      [(and (<= n-visited i) (< i (+ n-visited offset)))
       0.0]
      [else
-      (/ (* (vector-ref uv-ts (- i offset)) (vector-ref ws (- i offset)))
-         total-weight)])))
+      (/ (vector-ref uv-ws (- i offset)) total-weight)])))
 
 
 (define (transitions-extend t ps node-idx)
   (define n-existing (vector-length t))
-  (if (< node-idx n-existing)
-      (raise-mismatch-error 'transitions-extend
-                            "Given node-idx that is in existing transitions"
-                            node-idx)
-      (for/vector ([i node-idx])
-        (cond
-         [(< i n-existing)
-          (vector-ref t i)]
-         [(and (<= n-existing i) (< i node-idx))
-          #f]
-         [else
-          ps]))))
+  (when (< node-idx n-existing)
+    (raise-mismatch-error 'transitions-extend
+                          "Given node-idx that is in existing transitions"
+                          node-idx))
+  
+  (for/vector ([i (add1 node-idx)])
+    (cond
+     [(< i n-existing)
+      (vector-ref t i)]
+     [(and (<= n-existing i) (< i node-idx))
+      #f]
+     [else
+      ps])))

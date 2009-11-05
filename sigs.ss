@@ -3,12 +3,18 @@
 (require
  scheme/unit)
 
+(define-signature node-config^
+  ;; type P : The parameters (typically, prior) for a node implementation
+  (p))
+
 (define-signature node^
   ;; type P :   The parameters for this node implementation
   ;; 
   ;; type Obs : The observations for this node implementation
   (;; -> Node
    create-node
+   ;; Node -> Natural
+   node-n
    ;; Node -> P
    node-params
    ;; Obs -> [0,1]
@@ -60,6 +66,7 @@
    backward))
 
 (provide
+ node-config^
  node^
  bp-config^
  bp^
