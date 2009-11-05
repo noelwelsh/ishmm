@@ -1,6 +1,7 @@
 #lang scheme/unit
 
 (require
+ scheme/match
  (planet williams/science/random-distributions/beta)
  (planet schematics/numeric:1/for)
  "base.ss"
@@ -46,13 +47,13 @@
     weights)
    (random-poisson (/ (* c gamma) (+ c n)))))
 
-;; BP -> (values (Vectorof [0,1]) (Vectorof [0,1]))
+;; BP [Natural] -> (values (Vectorof [0,1]) (Vectorof [0,1]))
 ;;
 ;; Returns two vectors of weights. The indices of the first
 ;; vector indicate the node (as returned by
 ;; bp-node-ref). The second vector is weights given to
 ;; unsampled nodes. The indices are arbitrary.
-(define (bp-sample-weights p)
+(define (bp-sample-weights p [n-unvisited 0])
   (match-define (struct bp [n weights nodes]) p)
   (values
    (vector-map
@@ -60,9 +61,8 @@
       (for/sum ([i (in-range w)])
         (random-beta 1 (+ c n -1))))
     weights)
-   (for/vector ([i (random-poisson (/ (* c gamma) (+ c n)))])
-               ;; TODO! Check this!
-     (random-beta 1 (+ c n)))))
+   (for/vector ([i n-unvisited])
+     (random-beta 1 (+ c n -1)))))
 
 ;; BP (Vectorof Obs) (Vectorof Natural) -> BP
 ;;
