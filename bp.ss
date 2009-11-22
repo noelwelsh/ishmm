@@ -61,7 +61,7 @@
    (vector-map
     (lambda (w)
       (for/sum ([i (in-range w)])
-        (random-beta 1 (+ c n -1))))
+        (random-beta 1 (+ c n))))
     weights)
    (for/vector ([i n-unvisited])
      (random-beta 1 (+ c n)))))
@@ -99,11 +99,23 @@
                              (hash-ref nodes i)))))
     (make-bp (vector-length data) w n)))
    
-  
-
 ;; BP Natural -> Node
 (define (bp-node-ref p idx)
   (match-define (struct bp [n weights nodes]) p)
   (if (< idx (vector-length nodes))
       (vector-ref nodes idx)
       (create-node)))
+
+;; BP Natural -> [0,1]
+;;
+;; Returns the expected value of a weight. Values for weights outside those that have been sampled aren't really accurate. What is returned is the mass assigned to all unsampled weights.
+(define (bp-weight-expectation p idx)
+  (match-define (struct bp [n weights nodes]) p)
+  (if (< idx (vector-length weights))
+      (* (vector-ref weights idx) (/ 1 (+ c n)))
+      (/ 1 (+ c n))))
+
+;; BP Natural -> [0,1]
+;;
+;; Returns the likelihood of a transition
+(define bp-transition-likelihood bp-weight-expectation)

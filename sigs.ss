@@ -43,7 +43,11 @@
    ;; BP (Vectorof Obs) (Vectorof Natural) -> BP
    bp-update
    ;; BP Natural -> Node
-   bp-node-ref))
+   bp-node-ref
+   ;; BP Natural -> [0,1]
+   bp-transition-likelihood
+   ;; BP Natural -> [0,1]
+   bp-weight-expectation))
 
 (define-signature hmm^
   (;; -> HMM

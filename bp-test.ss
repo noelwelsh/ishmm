@@ -40,7 +40,7 @@
    (check-false (= (vector-ref uv-ws 0) (vector-ref uv-ws 1))))
 
   (test-case
-   "bp-update creates expected BP"
+   "bp-update updates node likelihoods"
    (define bp (bp-update (create-bp)
                          #(0 1 0 1 0 1)
                          #(0 1 0 2 0 3)))
@@ -50,11 +50,42 @@
    (define node-3 (bp-node-ref bp 3))
    (define node-4 (bp-node-ref bp 4))
    (check-= (node-likelihood node-4 1) (node-prior-likelihood 1) 0)
-   (check > (node-likelihood node-3 1) (node-prior-likelihood 1))  
-   (fail "Not implemented"))
+   (check > (node-likelihood node-3 1) (node-prior-likelihood 1))
+   (check = (node-likelihood node-3 1) (node-likelihood node-2 1))
+   (check = (node-likelihood node-2 1) (node-likelihood node-1 1))
+   (check > (node-likelihood node-0 0) (node-likelihood node-1 0))
+   (check < (node-likelihood node-0 1) (node-likelihood node-1 1)))
 
   (test-case
+   "bp-update updates transition likelihoods"
+   (define bp (bp-update (create-bp)
+                         #(0 1 0 1 0 1)
+                         #(0 1 0 2 0 3)))
+   (check = (bp-transition-likelihood bp 0) (/ 3 (+ 1 6)))
+   (check = (bp-transition-likelihood bp 1) (/ 1 (+ 1 6)))
+   (check = (bp-transition-likelihood bp 2) (/ 1 (+ 1 6)))
+   (check = (bp-transition-likelihood bp 3) (/ 1 (+ 1 6))))
+
+  (test-case
+   "bp-update updates weight expectations"
+   (define bp (bp-update (create-bp)
+                         #(0 1 0 1 0 1)
+                         #(0 1 0 2 0 3)))
+   (check = (bp-weight-expectation bp 0) (/ 3 (+ 1 6)))
+   (check = (bp-weight-expectation bp 1) (/ 1 (+ 1 6)))
+   (check = (bp-weight-expectation bp 2) (/ 1 (+ 1 6)))
+   (check = (bp-weight-expectation bp 3) (/ 1 (+ 1 6))))
+  
+  (test-case
    "bp-update compacts node indices"
-   (fail "Not implemented"))
+   (define bp (bp-update (create-bp)
+                         #(0 1 0 1 0 1)
+                         #(0 2 0 4 0 6)))
+   (check = (bp-weight-expectation bp 0) (/ 3 (+ 1 6)))
+   (check = (bp-weight-expectation bp 1) (/ 1 (+ 1 6)))
+   (check = (bp-weight-expectation bp 2) (/ 1 (+ 1 6)))
+   (check = (bp-weight-expectation bp 3) (/ 1 (+ 1 6)))
+   ;; This is the mass given to all unsampled nodes
+   (check = (bp-weight-expectation bp 4) (/ 1 (+ 1 6))))
 
   )
