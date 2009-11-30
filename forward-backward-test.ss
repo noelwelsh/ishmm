@@ -5,7 +5,8 @@
  (planet schematics/schemeunit:3/test)
  (planet schematics/numeric:1/vector)
  "sigs.ss"
- "forward-backward.ss")
+ "forward-backward.ss"
+ "nodes/dirichlet-node.ss")
 
 (define e 0.0001)
 
@@ -45,6 +46,15 @@
   (define (hmm-observation-probabilities hmm obs)
     (vector-ref o obs))
   )
+
+;; We need a node implementation, even those it won't be used in this case
+(define-unit node-config@
+  (import)
+  (export node-config^)
+  (define p #(1 1)))
+(define-values/invoke-unit/infer
+  (export node^)
+  (link node-config@ dirichlet-node@))
 
 (define-values/invoke-unit/infer test-hmm@)
 (define-values/invoke-unit/infer forward-backward@)

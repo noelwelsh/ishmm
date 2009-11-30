@@ -5,12 +5,31 @@
  (planet schematics/schemeunit:3/test)
  (planet schematics/numeric:1/vector)
  "sigs.ss"
+ "bp.ss"
  "ishmm.ss"
- "forward-backward.ss")
+ "forward-backward.ss"
+ "nodes/dirichlet-node.ss")
+
+(define-unit node-config@
+  (import)
+  (export node-config^)
+  (define p #(1 1)))
+
+(define-unit bp-config@
+  (import)
+  (export bp-config^)
+  (define c 1)
+  (define gamma 4))
+
+(define-values/invoke-unit/infer
+  (export hmm^ forward-backward^)
+  (link node-config@ bp-config@ dirichlet-node@ bp@ ishmm@ forward-backward@))
 
 
 (define/provide-test-suite forward-backward-ishmm-tests
+  ;; Here we just check we don't crash
   (test-case
-   "ishmm w/ forward-backward"
-   (fail "Not implemented"))
+   "new ishmm w/ forward-backward"
+   (smooth (create-hmm) #(0 1 0 1 0 1)))
+
   )

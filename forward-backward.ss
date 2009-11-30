@@ -6,7 +6,8 @@
  "util.ss")
 
 (import
- hmm^)
+ hmm^
+ node^)
 (export
  forward-backward^)
 
@@ -38,7 +39,10 @@
     (for/fold/vector ([p (hmm-initial-probabilities hmm)])
         ([i n-data]
          [o (in-vector data)])
-      (let* ([p-o (vector* p (hmm-observation-probabilities hmm o))]
+      (let* ([emit (vector-extend (hmm-observation-probabilities hmm o)
+                                  (vector-length p)
+                                  (node-prior-likelihood o))]
+             [p-o (vector* p emit)]
              [p-a (vector/s p-o (vector-sum p-o))]
              [next-p
               (for/fold ([next-p (make-vector (vector-length p-a) 0)])
@@ -46,9 +50,10 @@
                    [s   (in-naturals)])
                 (if (zero? p-s)
                     next-p
-                    (vector+
+                    (evector+
                      next-p
-                     (vector*s (hmm-transition-probabilities hmm s) p-s))))])
+                     (vector*s
+                      (hmm-transition-probabilities hmm s) p-s))))])
         (values next-p p-a))))
   fwd)
 
@@ -86,3 +91,20 @@
                                           normalisation))))])
            (values (vector/s next-p (vector-sum next-p)) p)))))
   bwd)
+
+
+;;; Utilities
+
+;; (Vectorof 'a) Natural ['a] -> (Vectorof 'a)
+(define (vector-extend v n [fill 0])
+  (if (>= (vector-length v) n)
+      v
+      (let ([new-v (make-vector n fill)])
+        (vector-copy! new-v 0 v)
+        new-v)))
+
+
+(define (evector+ v1 v2 [fill 0])
+  (define new-v1 (vector-extend v1 (vector-length v2) fill))
+  (define new-v2 (vector-extend v2 (vector-length v1) fill))
+  (vector+ new-v1 new-v2))
