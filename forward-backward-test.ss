@@ -45,6 +45,10 @@
 
   (define (hmm-observation-probabilities hmm obs)
     (vector-ref o obs))
+
+  (define (hmm-update hmm obs assignments)
+    ;; This hmm is fixed
+    hmm)
   )
 
 ;; We need a node implementation, even those it won't be used in this case

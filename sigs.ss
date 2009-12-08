@@ -47,7 +47,9 @@
    ;; BP Natural -> [0,1]
    bp-transition-likelihood
    ;; BP Natural -> [0,1]
-   bp-weight-expectation))
+   bp-weight-expectation
+   ;; BP -> Natural
+   bp-n-visited))
 
 (define-signature hmm^
   (;; -> HMM
@@ -57,7 +59,9 @@
    ;; HMM Natural -> (Vectorof [0,1])
    hmm-transition-probabilities
    ;; HMM (Vectorof {0,1}) Obs -> (Vectorof [0,1])
-   hmm-observation-probabilities))
+   hmm-observation-probabilities
+   ;; HMM (Vectorof Obs) (Vectorof Natural) -> HMM
+   hmm-update))
 
 (define-signature forward-backward^
   (;; HMM (Vectorof Obs) -> (Vectorof (Vector [0,1]))

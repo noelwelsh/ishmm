@@ -30,6 +30,10 @@
   ;; Here we just check we don't crash
   (test-case
    "new ishmm w/ forward-backward"
-   (smooth (create-hmm) #(0 1 0 1 0 1)))
+   (sample (smooth (create-hmm) #(0 1 0 1 0 1))))
 
+  (test-case
+   "ishmm with data"
+   (sample (smooth (hmm-update (create-hmm) #(0 1 0 1 0 1) #(0 1 0 1 0 1)) #(0 1 0 1 0 1)))
+   (fail "Not implemented"))
   )

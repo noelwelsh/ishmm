@@ -69,7 +69,7 @@
       ;; Pr(x_{t+1} | y_{1:T})
      ([p (vector-ref fwd (sub1 n-data))])
      ([_ n-data]
-      ;; This index into f + 1
+      ;; This index is into fwd at time t + 1
       [i (in-range (sub1 n-data) -1 -1)])
      ;; Pr(x_t | y_{1:t})
      (if (zero? i)
@@ -79,16 +79,18 @@
                 [normalisation
                  (for/fold ([z (make-vector n-states)])
                       ([s (in-range n-states)])
-                    (vector+ z
-                             (vector*s (hmm-transition-probabilities hmm s)
-                                       (vector-ref f s))))]
+                    (evector+ z
+                              (vector*s
+                               (hmm-transition-probabilities hmm s)
+                               (vector-ref f s))))]
                 [next-p
                  (vector*
-                   f
-                   (for/vector ([s n-states])
-                               (vector-sum
-                                (vector/ (vector* p (hmm-transition-probabilities hmm s))
-                                          normalisation))))])
+                  f
+                  (for/vector ([s n-states])
+                    (vector-sum
+                     (vector-normalise
+                      (vector* p (hmm-transition-probabilities hmm s))
+                      normalisation))))])
            (values (vector/s next-p (vector-sum next-p)) p)))))
   bwd)
 
@@ -103,8 +105,20 @@
         (vector-copy! new-v 0 v)
         new-v)))
 
-
 (define (evector+ v1 v2 [fill 0])
   (define new-v1 (vector-extend v1 (vector-length v2) fill))
   (define new-v2 (vector-extend v2 (vector-length v1) fill))
   (vector+ new-v1 new-v2))
+
+;; (Vectorof Number) (Vectorof Number) -> (Vectorof Number)
+;;
+;; We get states that have zero probability of occupancy so
+;; we can't just naively normalise or we'll divide-by-zero
+;; errors.
+(define (vector-normalise v z)
+  (for/vector ([_ (vector-length v)]
+               [x (in-vector v)]
+               [z (in-vector z)])
+    (if (and (zero? x) (zero? z))
+        0
+        (/ x z))))

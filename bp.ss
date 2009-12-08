@@ -119,3 +119,7 @@
 ;;
 ;; Returns the likelihood of a transition
 (define bp-transition-likelihood bp-weight-expectation)
+
+;; BP -> Natural
+(define (bp-n-visited bp)
+  (vector-length (bp-nodes bp)))

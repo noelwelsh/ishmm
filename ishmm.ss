@@ -46,6 +46,7 @@
 ;; ISHMM Obs -> (Vectorof [0,1])
 (define (hmm-observation-probabilities hmm obs)
   (match-define (struct ishmm [bp o i t]) hmm)
+  ;;(printf "hmm-observation-probabilities offset ~a\n" o)
   (for/vector ([i o])
     (node-likelihood (bp-node-ref bp i) obs)))
 
@@ -61,12 +62,22 @@
               (vector-set! t node-idx ps)
               ps)))
       (let* ([ps (sample-transitions bp o)]
-             [new-t  (transitions-extend t ps node-idx)])
+             [new-t  (transitions-extend t ps node-idx)]
+             [new-offset (vector-length ps)])
+        ;;(printf "hmm-transition-probabilities new offset ~a\n" (vector-length ps))
         (set-ishmm-transitions! hmm new-t)
+        (set-ishmm-offset! hmm new-offset)
         ps)))
 
+;; ISHMM (Vectorof Obs) (Vectorof Natural) -> ISHMM
+(define (hmm-update hmm data assignments)
+  (match-define (struct ishmm [bp o i t]) hmm)
+  (define new-bp (bp-update bp data assignments))
+  ;;(printf "hmm-update new offset ~a\n" (bp-n-visited new-bp))
+  (make-ishmm new-bp (bp-n-visited new-bp) #f (vector)))
 
-;; Internal functions
+
+;;; Internal functions
 
 (define (sample-transitions bp offset)
   (let*-values (([ts uv-ts] (bp-sample-transitions bp))
@@ -77,8 +88,9 @@
   (define total-weight (+ (vector-sum ws) (vector-sum uv-ws)))
   (define n-visited (vector-length ws))
   (define n-unvisited (vector-length uv-ws))
-  (define n (+ n-visited offset n-unvisited))
+  (define n (+ n-visited (- offset n-visited) n-unvisited))
 
+  ;;(printf "~a ~a ~a ~a\n" ws uv-ws ts uv-ts)
   (for/vector ([i n])
     (cond
      [(< i n-visited)
