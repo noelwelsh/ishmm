@@ -64,13 +64,13 @@
    hmm-update))
 
 (define-signature forward-backward^
-  (;; HMM (Vectorof Obs) -> (Vectorof (Vector [0,1]))
+  (;; HMM (Vectorof Obs) -> (Vectorof (Vectorof [0,1]))
    smooth
    ;; HMM (Vectorof Obs) -> (Vectorof Natural)
    sample
-   ;; HMM (Vectorof Obs) -> (Vectorof [0,1])
+   ;; HMM (Vectorof Obs) -> (Vectorof (Vectorof [0,1]))
    forward
-   ;; HMM (Vectorof Obs) (Vectorof [0,1]) -> (Vectorof [0,1])
+   ;; HMM (Vectorof Obs) (Vectorof (Vectorof [0,1])) -> (Vectorof [0,1])
    backward))
 
 (provide

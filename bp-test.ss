@@ -29,7 +29,7 @@
   (test-case
    "bp-sample-transitions for new BP"
    (define-values (ts uv-ts) (bp-sample-transitions (create-bp)))
-   (check > uv-ts 0)
+   (check >= uv-ts 0)
    (check = (vector-length ts) 0))
 
   (test-case

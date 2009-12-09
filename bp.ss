@@ -25,7 +25,7 @@
 ;; weights is the vector of weights given to the nodes
 ;;
 ;; nodes is the already sampled nodes, discrete part of the BP.
-(define-struct bp (n weights nodes))
+(define-struct bp (n weights nodes) #:transparent)
 
 
 ;; -> BP

@@ -4,6 +4,7 @@
  scheme/unit
  (planet schematics/schemeunit:3/test)
  (planet schematics/numeric:1/vector)
+ "base.ss"
  "sigs.ss"
  "bp.ss"
  "ishmm.ss"
@@ -30,10 +31,12 @@
   ;; Here we just check we don't crash
   (test-case
    "new ishmm w/ forward-backward"
-   (sample (smooth (create-hmm) #(0 1 0 1 0 1))))
+   (let loop ()
+     (with-handlers ([exn:ishmm:no-transitions? (lambda (e) (loop))])
+       (sample (smooth (create-hmm) #(0 1 0 1))))))
 
   (test-case
    "ishmm with data"
-   (sample (smooth (hmm-update (create-hmm) #(0 1 0 1 0 1) #(0 1 0 1 0 1)) #(0 1 0 1 0 1)))
+   (display (sample (smooth (hmm-update (create-hmm) #(0 1 0 1 0 1) #(0 1 0 1 0 1)) #(0 1 0 1 0 1))))
    (fail "Not implemented"))
   )

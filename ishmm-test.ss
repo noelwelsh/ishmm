@@ -53,6 +53,7 @@
    (define ps2 (hmm-transition-probabilities hmm 1))
    (check-equal? ps1 ps2))
 
+
   (test-case
    "hmm-update correctly updates hmm"
    (define hmm (hmm-update (create-hmm) #(0 1 0 0 1) #(1 0 1 1 0)))
@@ -61,7 +62,6 @@
 
    ;; Indices are shuffled by bp-update
    (check-equal? os (vector 4/5 1/4))
-   (display ps)(newline)
    (check > (vector-length ps) 0)
-   (check-= (vector-sum ps) 1.0 e))
+   (check-= (vector-sum ps) 1.0 e (format "~a" ps)))
   )

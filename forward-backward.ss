@@ -2,6 +2,7 @@
 
 (require
  (planet schematics/numeric:1/vector)
+ "base.ss"
  "sigs.ss"
  "util.ss")
 
@@ -43,6 +44,7 @@
                                   (vector-length p)
                                   (node-prior-likelihood o))]
              [p-o (vector* p emit)]
+             [_ (when (zero? (vector-sum p-o)) (printf "emit: ~a\np ~a\np-o ~a\no ~a\ninit ~a\n" emit p p-o o (hmm-initial-probabilities hmm)))]
              [p-a (vector/s p-o (vector-sum p-o))]
              [next-p
               (for/fold ([next-p (make-vector (vector-length p-a) 0)])
@@ -54,6 +56,13 @@
                      next-p
                      (vector*s
                       (hmm-transition-probabilities hmm s) p-s))))])
+
+        (when (zero? (vector-sum next-p))
+          (raise (make-exn:ishmm:no-transitions
+            "iSHMM sampled no transitions"
+            (current-continuation-marks))))
+
+        ;(printf "next-p is zero\np ~a\nemit ~a\np-o ~a\no ~a\np-a ~a\n" p emit p-o o p-a))
         (values next-p p-a))))
   fwd)
 
@@ -112,9 +121,7 @@
 
 ;; (Vectorof Number) (Vectorof Number) -> (Vectorof Number)
 ;;
-;; We get states that have zero probability of occupancy so
-;; we can't just naively normalise or we'll divide-by-zero
-;; errors.
+;; We get states that have zero probability of occupancy so we can't just naively normalise or we'll get divide-by-zero errors.
 (define (vector-normalise v z)
   (for/vector ([_ (vector-length v)]
                [x (in-vector v)]

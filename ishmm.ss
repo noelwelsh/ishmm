@@ -27,7 +27,7 @@
 ;; outside. That is, every function call will always return
 ;; the same answer -- it is just that we may not have
 ;; computed the answer at the time of the call.
-(define-struct ishmm (bp offset initial transitions) #:mutable)
+(define-struct ishmm (bp offset initial transitions) #:mutable #:transparent)
 
 
 ;; -> ISHMM
@@ -40,8 +40,13 @@
   (if i
       i
       (let ([ps (sample-transitions bp o)])
-        (set-ishmm-initial! hmm ps)
-        ps)))
+        (if (zero? (vector-sum ps))
+          (raise (make-exn:ishmm:no-transitions
+                  "iSHMM initial transition probabilities all zero"
+                  (current-continuation-marks)))
+          (begin
+            (set-ishmm-initial! hmm ps)
+            ps)))))
 
 ;; ISHMM Obs -> (Vectorof [0,1])
 (define (hmm-observation-probabilities hmm obs)
@@ -62,7 +67,7 @@
               (vector-set! t node-idx ps)
               ps)))
       (let* ([ps (sample-transitions bp o)]
-             [new-t  (transitions-extend t ps node-idx)]
+             [new-t (transitions-extend t ps node-idx)]
              [new-offset (vector-length ps)])
         ;;(printf "hmm-transition-probabilities new offset ~a\n" (vector-length ps))
         (set-ishmm-transitions! hmm new-t)
@@ -85,20 +90,28 @@
     (weights+transitions->probabilities ws uv-ws ts uv-ts offset)))
 
 (define (weights+transitions->probabilities ws uv-ws ts uv-ts offset)
-  (define total-weight (+ (vector-sum ws) (vector-sum uv-ws)))
-  (define n-visited (vector-length ws))
-  (define n-unvisited (vector-length uv-ws))
+  (define n-visited (vector-length ts))
+  (define n-unvisited uv-ts)
   (define n (+ n-visited (- offset n-visited) n-unvisited))
+  (define ps
+    (for/vector ([i n])
+      (cond
+       [(< i n-visited)
+        (* (vector-ref ts i) (vector-ref ws i))]
+       [(and (<= n-visited i) (< i offset))
+        0.0]
+       [else
+        (vector-ref uv-ws (- i offset))])))
+  (define total-weight (vector-sum ps))
+  
+  ;(when (zero? total-weight)
+  ;  (raise (make-exn:ishmm:no-transitions
+  ;          "iSHMM sampled no transitions"
+  ;          (current-continuation-marks))))
 
-  ;;(printf "~a ~a ~a ~a\n" ws uv-ws ts uv-ts)
-  (for/vector ([i n])
-    (cond
-     [(< i n-visited)
-      (/ (* (vector-ref ts i) (vector-ref ws i)) total-weight)]
-     [(and (<= n-visited i) (< i (+ n-visited offset)))
-      0.0]
-     [else
-      (/ (vector-ref uv-ws (- i offset)) total-weight)])))
+  (if (zero? total-weight)
+      ps
+      (vector/s ps total-weight)))
 
 
 (define (transitions-extend t ps node-idx)
