@@ -37,6 +37,8 @@
 
   (test-case
    "ishmm with data"
-   (display (sample (smooth (hmm-update (create-hmm) #(0 1 0 1 0 1) #(0 1 0 1 0 1)) #(0 1 0 1 0 1))))
-   (fail "Not implemented"))
+   (let loop ()
+     (with-handlers ([exn:ishmm:no-transitions? (lambda (e) (loop))])
+       (sample (smooth (hmm-update (create-hmm) #(0 1 0 1 0 1) #(0 1 0 1 0 1)) #(0 1 0 1 0 1))))))
+
   )

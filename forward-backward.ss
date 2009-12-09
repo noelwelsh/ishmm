@@ -44,7 +44,6 @@
                                   (vector-length p)
                                   (node-prior-likelihood o))]
              [p-o (vector* p emit)]
-             [_ (when (zero? (vector-sum p-o)) (printf "emit: ~a\np ~a\np-o ~a\no ~a\ninit ~a\n" emit p p-o o (hmm-initial-probabilities hmm)))]
              [p-a (vector/s p-o (vector-sum p-o))]
              [next-p
               (for/fold ([next-p (make-vector (vector-length p-a) 0)])
