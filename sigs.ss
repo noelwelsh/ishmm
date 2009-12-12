@@ -66,7 +66,7 @@
 (define-signature forward-backward^
   (;; HMM (Vectorof Obs) -> (Vectorof (Vectorof [0,1]))
    smooth
-   ;; HMM (Vectorof Obs) -> (Vectorof Natural)
+   ;; (Vectorof (Vectorof [0,1])) -> (Vectorof Natural)
    sample
    ;; HMM (Vectorof Obs) -> (Vectorof (Vectorof [0,1]))
    forward
